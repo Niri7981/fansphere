@@ -1,0 +1,24 @@
+# --- 系统与通用 ---
+.DS_Store
+.env*
+.env.local
+*.log
+
+# --- 后端 (Rust/Solana) ---
+# 注意：这里从 program/target 改成了 backend/target
+backend/target/
+# 这是 Solana 本地验证器的账本数据，必须忽略
+test-ledger/
+
+# --- 前端 (Next.js) ---
+# 建议加上前缀，确保精准定位
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.vercel/
+
+# --- 开发工具 ---
+.vscode/
+.idea/
+.cursor/
