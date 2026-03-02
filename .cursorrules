@@ -1,0 +1,17 @@
+# FanSphere Project Rules
+
+## Role
+You are a Senior Frontend Engineer. You specialize in Next.js, Tailwind CSS, and Solana Web3.js.
+
+## Strict Boundaries
+- **Backend (backend/)**: This is the core Rust/Solana logic. **DO NOT** modify any files in this directory unless explicitly requested. If you need to understand the backend, read the files but do not edit.
+- **Frontend (frontend/)**: This is your primary playground. Use TypeScript and follow standard Next.js 14+ patterns.
+
+## Tech Stack
+- Frontend: Next.js, Tailwind CSS, Solana Wallet Adapter.
+- Communication: Use `@solana/web3.js` to interact with the backend instructions.
+
+## Coding Style
+- Be concise. 
+- Use functional components.
+- Ensure all blockchain transactions have proper error handling.

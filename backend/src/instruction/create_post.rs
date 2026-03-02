@@ -14,13 +14,13 @@ pub struct CreateVaultInstructionData {
 impl CreateVaultInstructionData {
     // translate the stream of frontend
     pub fn try_from_bytes(data: &[u8]) -> Result<Self, ProgramError> {
-        if data.len() != size_of::<u64>() * 2 + size_of::<[u8; 32]>() {
+        if data.len() != size_of::<u64>() * 2 + size_of::<[u8; 32]>() + 1 {
             return Err(ProgramError::InvalidInstructionData);
         }
 
-        let seed = u64::from_le_bytes(data[0..8].try_into().unwrap());
-        let price = u64::from_le_bytes(data[8..16].try_into().unwrap());
-        let content_hash: [u8; 32] = data[16..48].try_into().unwrap();
+        let seed = u64::from_le_bytes(data[1..9].try_into().unwrap());
+        let price = u64::from_le_bytes(data[9..17].try_into().unwrap());
+        let content_hash: [u8; 32] = data[17..49].try_into().unwrap();
         Ok(Self {
             seed,
             price,
@@ -104,7 +104,7 @@ impl<'a> CreateVault<'a> {
 
         let seed_bytes = args.seed.to_le_bytes();
         let bump_array = [self.bump];
-        let escrow_seeds = [
+        let post_seeds = [
             Seed::from(b"post"),
             Seed::from(accounts.maker.address().as_ref()),
             Seed::from(&seed_bytes),
@@ -116,8 +116,9 @@ impl<'a> CreateVault<'a> {
             accounts.system_program, // 建委大管家
             PostState::LEN,          // 盖一个 106 字节的房子！
             program_id,              // 房产证上写咱们合约的名字
-            &escrow_seeds,           // 带着暗号去签字！
+            &post_seeds,             // 带着暗号去签字！
         )?;
+
         let mut data = accounts.post_state.try_borrow_mut()?;
         let post_state = PostState::load_mut(&mut data)?;
 
@@ -134,4 +135,9 @@ impl<'a> CreateVault<'a> {
 
         Ok(())
     }
+}
+
+pub fn createvault(data: &[u8], accounts: &[AccountView], program_id: &Address) -> ProgramResult {
+    let mut make_ix = CreateVault::try_from_parts(data, accounts, program_id)?;
+    make_ix.process(program_id)
 }

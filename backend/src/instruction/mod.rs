@@ -1,2 +1,2 @@
-pub mod create;
+pub mod create_post;
 pub mod helper;

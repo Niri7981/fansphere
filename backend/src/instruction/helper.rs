@@ -16,7 +16,7 @@ pub fn create_pda<'a>(
     program_id: &Address,             // 房产证上盖谁的章 (合约 ID)
     seeds: &[Seed],
 ) -> Result<(), ProgramError> {
-    let lamports = Rent::get()?.minimum_balance(space);
+    let lamports = Rent::get()?.try_minimum_balance(space)?;
     let signers = [Signer::from(seeds)];
     CreateAccount {
         from: payer,
