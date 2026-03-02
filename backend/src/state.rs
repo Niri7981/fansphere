@@ -25,6 +25,7 @@ pub struct PostState {
     pub subscriber_mint: Address, //(NFT FNAS TOKEN)
     pub tips_total: u64,          //积累打赏量
 }
+// LEN = 227 bytes
 
 impl PostState {
     //1 caluate automaticallty the length of total bytes
@@ -34,7 +35,14 @@ impl PostState {
         + size_of::<[u8; 32]>()
         + size_of::<u64>()
         + size_of::<[u8; 1]>()
-        + size_of::<Address>();
+        + size_of::<Address>()
+        + size_of::<u8>()
+        + size_of::<[u8; 32]>()
+        + size_of::<[u8; 32]>()
+        + size_of::<u32>()
+        + size_of::<u32>()
+        + size_of::<Address>()
+        + size_of::<u64>();
 
     //2 zero-copy and examine if the memory is enough
     // load_mut function is to change the data
@@ -53,24 +61,6 @@ impl PostState {
             return Err(ProgramError::InvalidAccountData);
         }
         Ok(unsafe { &*(bytes.as_ptr() as *const Self) })
-    }
-    #[inline(always)]
-    pub fn set_inner(
-        &mut self,
-        maker: Address,
-        price: u64,
-        content_hash: [u8; 32],
-        seed: u64,
-        bump: [u8; 1],
-        mint: Address,
-    ) {
-        self.is_initialized = 1; // 1 代表 true
-        self.maker = maker;
-        self.mint = mint;
-        self.price = price;
-        self.content_hash = content_hash;
-        self.bump = bump;
-        self.seed = seed;
     }
 
     #[inline(always)]

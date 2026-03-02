@@ -9,22 +9,32 @@ pub struct CreateVaultInstructionData {
     pub seed: u64,
     pub price: u64,
     pub content_hash: [u8; 32],
+    pub is_private: u8,
+    pub title: [u8; 32],
+    pub preview_hash: [u8; 32],
 }
 
 impl CreateVaultInstructionData {
     // translate the stream of frontend
     pub fn try_from_bytes(data: &[u8]) -> Result<Self, ProgramError> {
-        if data.len() != size_of::<u64>() * 2 + size_of::<[u8; 32]>() + 1 {
+        if data.len() != size_of::<u64>() * 2 + size_of::<[u8; 32]>() * 3 + size_of::<u8>() + 1 {
             return Err(ProgramError::InvalidInstructionData);
         }
 
         let seed = u64::from_le_bytes(data[1..9].try_into().unwrap());
         let price = u64::from_le_bytes(data[9..17].try_into().unwrap());
         let content_hash: [u8; 32] = data[17..49].try_into().unwrap();
+        let is_private = data[49];
+        let title: [u8; 32] = data[50..82].try_into().unwrap();
+        let preview_hash: [u8; 32] = data[82..114].try_into().unwrap();
+
         Ok(Self {
             seed,
             price,
             content_hash,
+            is_private,
+            title,
+            preview_hash,
         })
     }
 }
@@ -114,7 +124,7 @@ impl<'a> CreateVault<'a> {
             accounts.maker,          // 超模大哥掏钱交租金
             accounts.post_state,     // 这是咱们算出来的空地皮
             accounts.system_program, // 建委大管家
-            PostState::LEN,          // 盖一个 106 字节的房子！
+            PostState::LEN,          // 盖一个 227字节的房子！
             program_id,              // 房产证上写咱们合约的名字
             &post_seeds,             // 带着暗号去签字！
         )?;
@@ -122,14 +132,25 @@ impl<'a> CreateVault<'a> {
         let mut data = accounts.post_state.try_borrow_mut()?;
         let post_state = PostState::load_mut(&mut data)?;
 
-        post_state.set_inner(
-            self.accounts.maker.address().clone(),
-            self.args.price,
-            self.args.content_hash,
-            self.args.seed,
-            [self.bump],
-            self.accounts.mint.address().clone(),
-        );
+        // 获取可变引用后，直接像填表格一样一项项赋值！
+        post_state.is_initialized = 1;
+        post_state.maker = accounts.maker.address().clone();
+        post_state.price = args.price;
+        post_state.content_hash = args.content_hash;
+        post_state.seed = args.seed;
+        post_state.bump = [self.bump];
+        post_state.mint = accounts.maker.address().clone();
+
+        // --- 填入新增的社交数据 ---
+        post_state.is_private = args.is_private;
+        post_state.title = args.title;
+        post_state.preview_hash = args.preview_hash;
+
+        // --- 社交计数器必须手动初始化为 0 ---
+        post_state.likes = 0;
+        post_state.comments_count = 0;
+        post_state.tips_total = 0;
+        post_state.subscriber_mint = Address::default(); // 默认全 0
 
         drop(data);
 
