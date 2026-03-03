@@ -101,6 +101,37 @@ pub struct CreatorProfile {
     pub bump: [u8; 1],            //used by PDA
 }
 // LEN = 146 bytes,
+impl CreatorProfile {
+    //1 caluate automaticallty the length of total bytes
+    pub const LEN: usize = core::mem::size_of::<u8>()
+        + size_of::<Address>()
+        + size_of::<[u8; 32]>()
+        + size_of::<[u8; 32]>()
+        + size_of::<Address>()
+        + size_of::<u64>()
+        + size_of::<u32>()
+        + size_of::<u32>()
+        + size_of::<[u8; 1]>();
+
+    //2 zero-copy and examine if the memory is enough
+    // load_mut function is to change the data
+    #[inline(always)]
+    pub fn load_mut(bytes: &mut [u8]) -> Result<&mut Self, ProgramError> {
+        if bytes.len() < Self::LEN {
+            return Err(ProgramError::InvalidAccountData);
+        }
+        // use as_mut_ptr  to tell what is the started memory address
+        Ok(unsafe { &mut *(bytes.as_mut_ptr() as *mut Self) })
+    }
+    //to get the unmulitable data(read data)
+    #[inline(always)]
+    pub fn load(bytes: &[u8]) -> Result<&Self, ProgramError> {
+        if bytes.len() != Self::LEN {
+            return Err(ProgramError::InvalidAccountData);
+        }
+        Ok(unsafe { &*(bytes.as_ptr() as *const Self) })
+    }
+}
 
 // the CommentState
 //根评论 PDA seeds: ["comment", post_pda, comment_index_le_bytes]
@@ -131,7 +162,32 @@ pub struct LikerRecord {
     pub bump: [u8; 1],
 }
 //LEN = 66;
+impl LikerRecord {
+    //1 caluate automaticallty the length of total bytes
+    pub const LEN: usize = core::mem::size_of::<u8>()
+        + size_of::<Address>()
+        + size_of::<Address>()
+        + size_of::<[u8; 1]>();
 
+    //2 zero-copy and examine if the memory is enough
+    // load_mut function is to change the data
+    #[inline(always)]
+    pub fn load_mut(bytes: &mut [u8]) -> Result<&mut Self, ProgramError> {
+        if bytes.len() < Self::LEN {
+            return Err(ProgramError::InvalidAccountData);
+        }
+        // use as_mut_ptr  to tell what is the started memory address
+        Ok(unsafe { &mut *(bytes.as_mut_ptr() as *mut Self) })
+    }
+    //to get the unmulitable data(read data)
+    #[inline(always)]
+    pub fn load(bytes: &[u8]) -> Result<&Self, ProgramError> {
+        if bytes.len() != Self::LEN {
+            return Err(ProgramError::InvalidAccountData);
+        }
+        Ok(unsafe { &*(bytes.as_ptr() as *const Self) })
+    }
+}
 // SubscriptionRecord
 // PDA SEEDS:["subsciption",creator_pubkey,subscriber_pubkey]
 pub struct SubscriptionRecord {

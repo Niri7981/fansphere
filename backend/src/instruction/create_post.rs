@@ -21,6 +21,7 @@ impl CreateVaultInstructionData {
             return Err(ProgramError::InvalidInstructionData);
         }
 
+        //slice the first 8 bytes in a prescribed array
         let seed = u64::from_le_bytes(data[1..9].try_into().unwrap());
         let price = u64::from_le_bytes(data[9..17].try_into().unwrap());
         let content_hash: [u8; 32] = data[17..49].try_into().unwrap();
