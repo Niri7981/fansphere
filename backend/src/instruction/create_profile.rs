@@ -12,11 +12,11 @@ pub struct CreateProfileInstructionData {
 
 impl CreateProfileInstructionData {
     pub fn try_from_bytes(data: &[u8]) -> Result<Self, ProgramError> {
-        if data.len() != size_of::<u32>() * 2 {
+        if data.len() != size_of::<[u8; 32]>() * 2 + 1 {
             return Err(ProgramError::InvalidInstructionData);
         }
 
-        let username: [u8; 32] = data[0..32].try_into().unwrap();
+        let username: [u8; 32] = data[1..32].try_into().unwrap();
         let avater_hash: [u8; 32] = data[32..64].try_into().unwrap();
 
         Ok(Self {
@@ -39,7 +39,7 @@ pub struct CreateProfileAccounts<'a> {
 
 impl<'a> CreateProfileAccounts<'a> {
     pub fn try_from_bytes(accounts: &'a [AccountView]) -> Result<Self, ProgramError> {
-        if accounts.len() != 3 {
+        if accounts.len() < 4 {
             return Err(ProgramError::InvalidAccountData);
         }
 
