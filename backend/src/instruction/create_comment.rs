@@ -38,7 +38,7 @@ pub struct CreateCommentAccounts<'a> {
 impl<'a> CreateCommentAccounts<'a> {
     pub fn try_from_bytes(accounts: &'a [AccountView]) -> Result<Self, ProgramError> {
         if accounts.len() < 6 {
-            return Err(ProgramError::InvalidInstructionData);
+            return Err(ProgramError::NotEnoughAccountKeys);
         }
         let author = &accounts[0];
         if !author.is_signer() {
@@ -157,4 +157,9 @@ impl<'a> CreateComment<'a> {
         drop(post_data);
         Ok(())
     }
+}
+
+pub fn createcomment(data: &[u8], accounts: &[AccountView], program_id: &Address) -> ProgramResult {
+    let mut make_ix = CreateComment::try_from_parts(data, accounts, program_id)?;
+    make_ix.process(program_id)
 }
