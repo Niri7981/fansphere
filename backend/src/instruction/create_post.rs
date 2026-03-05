@@ -87,6 +87,10 @@ impl<'a> CreateVault<'a> {
         program_id: &Address,
     ) -> Result<Self, ProgramError> {
         let parsed_accounts = CreateVaultAccounts::try_from_bytes(accounts)?;
+        if data[0] != 0x01 {
+            return Err(ProgramError::InvalidInstructionData);
+        }
+
         let parsed_args = CreateVaultInstructionData::try_from_bytes(data)?;
 
         let (expected_pda, bump) = Address::find_program_address(

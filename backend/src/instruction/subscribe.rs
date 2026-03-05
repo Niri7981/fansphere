@@ -1,6 +1,12 @@
-use pinocchio::{cpi::Seed, error::ProgramError, AccountView, Address, ProgramResult};
+use pinocchio::{
+    cpi::Seed,
+    error::ProgramError,
+    sysvars::{clock::Clock, Sysvar},
+    AccountView, Address, ProgramResult,
+};
+use pinocchio_token::instructions::Transfer;
 
-use crate::{helper::create_pda, SubscriptionRecord};
+use crate::{helper::create_pda, CreatorProfile, SubscriptionRecord};
 
 pub struct SubscribeData {
     pub expires_at: i64,
@@ -17,23 +23,31 @@ impl SubscribeData {
 
 pub struct SubscribeAccounts<'a> {
     pub subscriber: &'a AccountView,
-    pub creator: &'a AccountView,
-    pub nft_mint: &'a AccountView,
-    pub subscribe_state: &'a AccountView,
+    pub creator_profile: &'a AccountView,
+    pub subscriber_token_account: &'a AccountView,
+    pub creator_token_account: &'a AccountView,
+    pub subscription_record: &'a AccountView,
+    pub subscriber_nft_account: &'a AccountView,
+    pub subscriber_mint: &'a AccountView,
+    pub token_program: &'a AccountView,
     pub system_program: &'a AccountView,
 }
 
 impl<'a> SubscribeAccounts<'a> {
     pub fn try_from_bytes(accounts: &'a [AccountView]) -> Result<Self, ProgramError> {
-        if accounts.len() < 5 {
+        if accounts.len() < 9 {
             return Err(ProgramError::NotEnoughAccountKeys);
         }
 
         let subscriber = &accounts[0];
-        let creator = &accounts[1];
-        let nft_mint = &accounts[2];
-        let subscribe_state = &accounts[3];
-        let system_program = &accounts[4];
+        let creator_profile = &accounts[1];
+        let subscriber_token_account = &accounts[2];
+        let creator_token_account = &accounts[3];
+        let subscription_record = &accounts[4];
+        let subscriber_nft_account = &accounts[5];
+        let subscriber_mint = &accounts[6];
+        let token_program = &accounts[7];
+        let system_program = &accounts[8];
 
         if !subscriber.is_signer() {
             return Err(ProgramError::MissingRequiredSignature);
@@ -41,9 +55,13 @@ impl<'a> SubscribeAccounts<'a> {
 
         Ok(Self {
             subscriber,
-            creator,
-            nft_mint,
-            subscribe_state,
+            creator_profile,
+            subscriber_token_account,
+            creator_token_account,
+            subscription_record,
+            subscriber_nft_account,
+            subscriber_mint,
+            token_program,
             system_program,
         })
     }
@@ -62,21 +80,26 @@ impl<'a> Subscribe<'a> {
         program_id: &Address,
     ) -> Result<Self, ProgramError> {
         let parsed_accounts = SubscribeAccounts::try_from_bytes(accounts)?;
-        if data[0] != 0x03 {
+        if data[0] != 0x04 {
             return Err(ProgramError::InvalidInstructionData);
         }
         let args = SubscribeData::try_from_bytes(data)?;
 
+        let profile_data = parsed_accounts.creator_profile.try_borrow()?;
+        let profile_state = CreatorProfile::load(&profile_data)?;
+        let real_creator_pubkey = profile_state.creator.clone();
+        drop(profile_data);
+
         let (expected_pda, bump) = Address::find_program_address(
             &[
-                b"subscribe",
+                b"subscription",
+                real_creator_pubkey.as_ref(),
                 parsed_accounts.subscriber.address().as_ref(),
-                parsed_accounts.creator.address().as_ref(),
             ],
             program_id,
         );
 
-        if parsed_accounts.subscribe_state.address() != &expected_pda {
+        if parsed_accounts.subscription_record.address() != &expected_pda {
             return Err(ProgramError::InvalidAccountData);
         }
 
@@ -91,32 +114,51 @@ impl<'a> Subscribe<'a> {
         let accounts = &self.accounts;
         let bump_array = [self.bump];
 
-        let bending = accounts.nft_mint.address().as_ref();
+        let profile_data = accounts.creator_profile.try_borrow()?;
+        let profile_state = CreatorProfile::load(&profile_data)?;
+        let price = profile_state.subscription_price;
+        let real_creator_pubkey = profile_state.creator.clone();
+        drop(profile_data);
+
+        let bending = accounts.subscriber.address().as_ref();
         let subscribe_seed = [
-            Seed::from(b"subscribe"),
-            Seed::from(accounts.creator.address().as_ref()),
+            Seed::from(b"subscription"),
+            Seed::from(real_creator_pubkey.as_ref()),
             Seed::from(bending),
             Seed::from(&bump_array),
         ];
 
+        Transfer {
+            from: accounts.subscriber_token_account,
+            to: accounts.creator_token_account,
+            authority: accounts.subscriber,
+            amount: price,
+        }
+        .invoke()?;
+
         create_pda(
             accounts.subscriber,
-            accounts.subscribe_state,
+            accounts.subscription_record,
             accounts.system_program,
             SubscriptionRecord::LEN,
             program_id,
             &subscribe_seed,
         )?;
 
-        let mut data = accounts.subscribe_state.try_borrow_mut()?;
+        let mut data = accounts.subscription_record.try_borrow_mut()?;
         let subscribe_state = SubscriptionRecord::load_mut(&mut data)?;
 
+        let clock = Clock::get()?;
+        let current_timestamp = clock.unix_timestamp;
+        let thirty_days_seconds: i64 = 30 * 24 * 3600;
+        let new_expires_at = current_timestamp.checked_add(thirty_days_seconds).unwrap();
+
         subscribe_state.is_initialized = 1;
-        subscribe_state.expires_at = self.args.expires_at;
+        subscribe_state.expires_at = new_expires_at;
         subscribe_state.bump = [self.bump];
         subscribe_state.subscriber = accounts.subscriber.address().clone();
-        subscribe_state.nft_mint = accounts.nft_mint.address().clone();
-        subscribe_state.creator = accounts.creator.address().clone();
+        subscribe_state.nft_mint = accounts.subscriber_nft_account.address().clone();
+        subscribe_state.creator = real_creator_pubkey;
 
         drop(data);
 

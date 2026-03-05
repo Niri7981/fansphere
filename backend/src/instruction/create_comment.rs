@@ -76,7 +76,7 @@ impl<'a> CreateComment<'a> {
     ) -> Result<Self, ProgramError> {
         let parsed_accounts = CreateCommentAccounts::try_from_bytes(accounts)?;
 
-        if data[0] != 0x02 {
+        if data[0] != 0x03 {
             return Err(ProgramError::InvalidInstructionData);
         }
         let args = CreateCommentData::try_from_bytes(data)?;

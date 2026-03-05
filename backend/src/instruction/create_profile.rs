@@ -8,20 +8,23 @@ use pinocchio::{cpi::Seed, error::ProgramError, AccountView, Address, ProgramRes
 pub struct CreateProfileInstructionData {
     pub username: [u8; 32],
     pub avater_hash: [u8; 32],
+    pub subscription_price: u64,
 }
 
 impl CreateProfileInstructionData {
     pub fn try_from_bytes(data: &[u8]) -> Result<Self, ProgramError> {
-        if data.len() != size_of::<[u8; 32]>() * 2 + 1 {
+        if data.len() != size_of::<[u8; 32]>() * 2 + size_of::<u64>() + 1 {
             return Err(ProgramError::InvalidInstructionData);
         }
 
-        let username: [u8; 32] = data[1..32].try_into().unwrap();
-        let avater_hash: [u8; 32] = data[32..64].try_into().unwrap();
+        let username: [u8; 32] = data[1..33].try_into().unwrap();
+        let avater_hash: [u8; 32] = data[33..65].try_into().unwrap();
+        let subscription_price = u64::from_le_bytes(data[65..73].try_into().unwrap());
 
         Ok(Self {
             username,
             avater_hash,
+            subscription_price,
         })
     }
 }
@@ -73,9 +76,12 @@ impl<'a> CreateProfile<'a> {
         accounts: &'a [AccountView],
         program_id: &Address,
     ) -> Result<Self, ProgramError> {
-        let parsed_data = CreateProfileInstructionData::try_from_bytes(data)?;
         let parsed_accounts = CreateProfileAccounts::try_from_bytes(accounts)?;
 
+        if data[0] != 0x00 {
+            return Err(ProgramError::InvalidInstructionData);
+        }
+        let parsed_data = CreateProfileInstructionData::try_from_bytes(data)?;
         let (expected_pda, bump) = Address::find_program_address(
             &[b"profile", parsed_accounts.creator.address().as_ref()],
             program_id,
@@ -119,7 +125,7 @@ impl<'a> CreateProfile<'a> {
         profile_state.username = profile_data.username;
         profile_state.avatar_hash = profile_data.avater_hash;
         profile_state.subscriber_mint = accounts.subscriber_mint.address().clone();
-        profile_state.subscription_price = 0;
+        profile_state.subscription_price = profile_data.subscription_price;
         profile_state.total_posts = 0;
         profile_state.total_subscribers = 0;
         profile_state.bump = bump_array;

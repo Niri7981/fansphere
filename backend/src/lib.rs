@@ -6,7 +6,10 @@ use pinocchio::{
 
 pub mod instruction;
 pub mod state;
-use crate::create_post::createvault;
+use crate::instruction::{
+    create_comment::createcomment, create_post::createvault, create_profile::createprofile,
+    like_comment::likecomment, like_post::likepost, subscribe::createsubscribe,
+};
 pub use instruction::*;
 pub use state::*;
 
@@ -23,8 +26,12 @@ pub fn process_instruction(
         .ok_or(ProgramError::InvalidInstructionData)?;
 
     match discriminator {
-        0 => createvault(instruction_data, accounts, program_id),
-
+        0 => createprofile(instruction_data, accounts, program_id),
+        1 => createvault(instruction_data, accounts, program_id),
+        2 => likepost(instruction_data, accounts, program_id),
+        3 => createcomment(instruction_data, accounts, program_id),
+        4 => createsubscribe(instruction_data, accounts, program_id),
+        5 => likecomment(instruction_data, accounts, program_id),
         _ => Err(ProgramError::InvalidInstructionData),
     }
 }
