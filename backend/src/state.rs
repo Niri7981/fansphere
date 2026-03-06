@@ -230,6 +230,7 @@ pub struct SubscriptionRecord {
     pub bump: [u8; 1],
 }
 //LEN = 106
+#[repr(C)]
 impl SubscriptionRecord {
     //1 caluate automaticallty the length of total bytes
     pub const LEN: usize = core::mem::size_of::<u8>()
