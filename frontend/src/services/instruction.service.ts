@@ -290,7 +290,6 @@ export function createSubscription(
     creator_profile: PublicKey,
     subscriber_token_account: PublicKey,
     creator_token_account: PublicKey,
-    subscription_record: PublicKey,
     subscriber_nft_account: PublicKey,
     subscriber_mint: PublicKey,
 ): TransactionInstruction {
