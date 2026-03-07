@@ -83,15 +83,15 @@ export function deriveLikePDA(targetPda: PublicKey, userPubkey: PublicKey): [Pub
  * 5. 推导根评论 PDA (CommentState)
  * @description 直接挂在帖子下方的第一级评论。
  * @rust_seeds [b"comment", post_pda, index_u32_le]
- * @param postPda 该评论所属的帖子 PDA
+ * @param parent 该评论所属的帖子 PDA
  * @param index 该帖子下的评论序号 (前端需传入第几条，会被转为 4 字节小端序)
  * @returns [PDA公钥, bump值]
  */
-export function deriveCommentPDA(index: number, postPDA: PublicKey): [PublicKey, number] {
+export function deriveCommentPDA(parent: PublicKey, index: number): [PublicKey, number] {
     return PublicKey.findProgramAddressSync(
         [SEED_COMMENT,
-            encodeU32LE(index),
-            postPDA.toBuffer()],
+            parent.toBuffer(),
+            encodeU32LE(index)],
         FANSPHERE_PROGRAM_ID,
     );
 }
