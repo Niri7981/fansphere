@@ -23,6 +23,12 @@ export function encodeU64LE(num: bigint | number): Uint8Array {
     return new Uint8Array(buf);
 }
 
+export function encodeU32LE(num: number): Uint8Array {
+    const buf = Buffer.alloc(4);
+    buf.writeInt32LE(num, 0);
+    return new Uint8Array(buf);
+}
+
 /**
  * turn bigint into 8bytes
  *  use for expires_at
@@ -40,3 +46,4 @@ export function encodeI64LE(num: bigint | number): Uint8Array {
 export function hexToUint8Array(hexString: string): Uint8Array {
     return new Uint8Array(Buffer.from(hexString, 'hex'));
 }
+

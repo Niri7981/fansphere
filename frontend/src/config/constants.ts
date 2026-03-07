@@ -14,4 +14,4 @@ export const SEED_POST = Buffer.from("post");
 export const SEED_SUBSCRIPTION = Buffer.from("subscription");
 export const SEED_LIKE = Buffer.from("like");
 export const SEED_COMMENT = Buffer.from("comment");
-//export const SEED_REPLY = Buffer.from("reply");
+export const SEED_REPLY = Buffer.from("reply");
