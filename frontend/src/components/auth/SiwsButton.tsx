@@ -4,16 +4,28 @@
 import React from 'react';
 // [TODO 2]: 引入咱们自己昨天写的神级机械臂（别再让 VS Code 乱导 crypto 了！）
 import { useSign } from '@/hooks/useSignIn';
+import { useRouter } from 'next/navigation';
 
 export function SiwsButton() {
-    // [TODO 3]: 激活机械臂，把里面的 3 件法宝解构出来
     const { signIn, isLoading, error } = useSign();
+
+    const router = useRouter();
+
+    const handleLoginClick = async () => {
+        const success = await signIn();
+
+        if (success) {
+            router.push('/expolore');
+        }
+    }
+
+
 
     return (
         <div className="flex flex-col items-center gap-2 mt-8">
             <button
                 // [TODO 4.1]: 绑定点击事件。注意是 onClick={动作变量}
-                onClick={signIn}
+                onClick={handleLoginClick}
 
                 // [TODO 4.2]: 防御机制。如果 isLoading 是 true，这个按钮就会被锁死
                 disabled={isLoading}
