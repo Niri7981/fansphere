@@ -15,7 +15,7 @@ export function SiwsButton() {
         const success = await signIn();
 
         if (success) {
-            router.push('/expolore');
+            router.push('/explore');
         }
     }
 
