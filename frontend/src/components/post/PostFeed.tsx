@@ -5,7 +5,7 @@ import React from "react";
 import { useEffect } from "react";
 import { useInView } from 'react-intersection-observer';
 import { PostCard } from "./PostCard";
-
+import { LockedPostCard } from "./LockedPostCard";
 export function PostFeed() {
     const {
         data,
@@ -40,7 +40,7 @@ export function PostFeed() {
                 <React.Fragment key={pageIndex}>
                     {/* 在这里再写一个 map 去遍历 page.data，返回 <PostCard key={post.id} post={post} /> */}
                     {page.data.map((post: any) => (
-                        <PostCard key={post.id} post={post} />
+                        <LockedPostCard key={post.id} post={post} />
                     ))}
                 </React.Fragment>
             ))}
