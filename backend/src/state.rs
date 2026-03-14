@@ -219,6 +219,7 @@ impl LikerRecord {
         Ok(unsafe { &*(bytes.as_ptr() as *const Self) })
     }
 }
+#[repr(C)]
 // SubscriptionRecord
 // PDA SEEDS:["subsciption",creator_pubkey,subscriber_pubkey]
 pub struct SubscriptionRecord {
@@ -230,7 +231,6 @@ pub struct SubscriptionRecord {
     pub bump: [u8; 1],
 }
 //LEN = 106
-#[repr(C)]
 impl SubscriptionRecord {
     //1 caluate automaticallty the length of total bytes
     pub const LEN: usize = core::mem::size_of::<u8>()
