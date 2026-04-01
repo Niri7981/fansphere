@@ -8,19 +8,19 @@ A Web2.5 creator subscription platform prototype built on Solana, focused on dir
 
 ## Overview
 
-FanSphere is a product prototype exploring what a creator subscription platform could look like when the core monetization and access-control logic lives on-chain.
+FanSphere is a Web2.5 creator subscription prototype built on Solana.
 
-Creators publish content, users subscribe through on-chain payments, and premium content is unlocked based on verifiable subscription state.
+Creators publish content, users subscribe through wallet-to-wallet payments, and premium content unlocks based on verifiable on-chain subscription state.
 
-This is not a production-ready system. It is a **working early-stage prototype** built to validate the core product loop:
+The current build validates the core product loop:
 
 - creator onboarding
 - content publishing
 - subscription payments
 - gated content access
-- the connection between on-chain state and frontend rendering
+- persistent content rendering after refresh
 
-The current version is best described as a **Web2.5 product prototype**: trust-critical logic such as payments, subscriptions, and access control lives on-chain, while heavier features such as indexing, discovery, ranking, and analytics are planned for a future off-chain layer.
+The core idea is simple: keep trust-critical logic such as payments, subscriptions, and access control on-chain, while leaving heavier product logic to a future off-chain layer.
 
 ## Product Preview
 
@@ -56,6 +56,14 @@ This is the pre-subscription state. Users can see the preview and subscription e
 
 <p align="center">
   <img src="docs/locked-post.png" alt="Locked premium post" width="900" />
+</p>
+
+### Unlocked Premium Post
+
+This is the post-subscription state. Once the subscription is active, premium content is unlocked based on on-chain subscription state.
+
+<p align="center">
+  <img src="docs/unlocked-post.png" alt="Unlocked premium post" width="900" />
 </p>
 
 ## Why I Built This
@@ -110,18 +118,22 @@ The current prototype already supports:
 - **Basic social interactions**  
   Includes the on-chain model for comments and likes
 
-## Tech Stack
+## Technical Highlights
 
-| Layer | Technology |
-|---|---|
-| Solana Program | Rust, Pinocchio |
-| Frontend | Next.js, React, TypeScript |
-| Styling | Tailwind CSS |
-| State Management / Data Fetching | React Query, Jotai |
-| Wallet Integration | Solana Wallet Adapter |
-| Media Storage | Irys |
-| On-chain Interaction | `@solana/web3.js` |
-| Current Environment | Solana localnet + Irys devnet |
+- **Solana program in Rust with Pinocchio**  
+  Built around PDA-based state for creators, posts, subscriptions, comments, and likes.
+
+- **On-chain subscription gating**  
+  Premium content access is determined by subscription state rather than an off-chain flag.
+
+- **Wallet-to-wallet subscription flow**  
+  The prototype focuses on direct creator monetization without platform-controlled payment rails.
+
+- **Irys-backed content references**  
+  Media references persist so content can still render correctly after refresh.
+
+- **Web2.5 architecture**  
+  Trust-critical logic lives on-chain, while heavier discovery and ranking logic is planned for a future indexing layer.
 
 ## Architecture Overview
 
@@ -169,25 +181,15 @@ Core account types include:
 
 The goal of this design is to make the core monetization and access-control logic verifiable through deterministic on-chain state, while leaving heavier product features to a future indexing layer.
 
-## Current Demo Status
+## Current Scope
 
-FanSphere is currently shared as a **localnet-based prototype**.
+FanSphere is currently shared as a working prototype focused on one core loop:
 
-At this stage, the repository is mainly intended for:
+creator publishes → user subscribes → premium content unlocks based on on-chain state.
 
-- code review
-- architecture reference
-- product showcase
-- implementation review
+This public repository focuses on the on-chain program, architecture, PDA/state documentation, and demo assets.
 
-The current version is meant to demonstrate that the core product loop already works, rather than to provide a fully hosted public demo or a polished one-click deployment experience.
-
-Later versions will add:
-
-- devnet deployment
-- hosted frontend demo
-- cleaner setup guide
-- a more complete public demo environment
+A broader public demo, indexing layer, and hosted frontend can come later, but the core subscription and gating model is already working.
 
 ## PDA Layout
 
@@ -220,50 +222,13 @@ FanSphere uses a small set of deterministic PDAs to model creators, posts, subsc
 
 For a more detailed breakdown of PDA relationships and seed design, see [docs/PDA_LAYOUT.md](docs/PDA_LAYOUT.md).
 
-## Current Limitations
-
-The current version still has several limitations:
-
-- primarily runs on localnet
-- no public devnet demo yet
-- no mature backend or auth layer
-- no indexer
-- no full search, recommendation, or feed ranking
-- transaction feedback and error handling can be improved further
-- automated testing is still limited
-
-## Roadmap
-
-Planned next steps include:
-
-- [ ] deploy to devnet
-- [ ] launch a hosted frontend demo
-- [ ] introduce a Python indexer
-- [ ] improve global feed and discovery
-- [ ] add analytics and ranking
-- [ ] improve transaction UX and error handling
-- [ ] expand testing and engineering quality
-- [ ] continue refining the overall product experience
-
 ## Open Source Scope
 
-The current repository mainly opens up:
+This public repository currently includes:
 
 - Solana program code
-- core frontend logic
-- PDA, parser, and instruction-related implementation
-- README and architecture notes
+- README and project overview
+- PDA and state documentation
+- demo GIFs and product screenshots
 
-Deployment, ops, and public demo details will be cleaned up and documented more fully in a later version instead of being over-explained in this one.
-
-## What This Project Represents
-
-FanSphere is not just a creator subscription prototype for me.
-
-It is also a build-focused project that demonstrates my ability to:
-
-- design an on-chain account model
-- build payment and subscription logic on Solana
-- connect program logic, frontend behavior, and product UX
-- understand lower-level implementation choices without relying entirely on heavy abstractions
-- express both technical judgment and product thinking through a complete project
+The frontend code is not included in this public repository yet.
