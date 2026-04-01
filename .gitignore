@@ -1,0 +1,32 @@
+# System
+.DS_Store
+*.log
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Rust / Solana
+target/
+backend/target/
+test-ledger/
+backend/test-ledger/
+**/*keypair.json
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Next.js
+.next/
+frontend/.next/
+out/
+frontend/out/
+build/
+frontend/build/
+
+# Editor
+.vscode/
+.idea/
+.cursor/
